@@ -73,4 +73,45 @@ var _ = Describe("NonExecutingQueueManager", func() {
 
 		Expect(err).ToNot(BeNil())
 	})
+
+	It("can add multiple items to the same queue at once", func() {
+		qm := taskqueue.NewNonExecutingQueueManager()
+		task1 := &taskqueue.Task{
+			&ae.Task{Name: "fooTask"},
+		}
+		task2 := &taskqueue.Task{
+			&ae.Task{Name: "barTask"},
+		}
+		qm.AddMulti(c, []*taskqueue.Task{task1, task2}, "queue1")
+		Expect(qm.HasTaskInQueue(task1, "queue1")).To(BeTrue())
+		Expect(qm.HasTaskInQueue(task2, "queue1")).To(BeTrue())
+	})
+
+	It("can delete multiple items from the same queue at once", func() {
+		qm := taskqueue.NewNonExecutingQueueManager()
+		task1 := &taskqueue.Task{
+			&ae.Task{Name: "fooTask"},
+		}
+		task2 := &taskqueue.Task{
+			&ae.Task{Name: "barTask"},
+		}
+		qm.AddMulti(c, []*taskqueue.Task{task1, task2}, "queue1")
+		qm.DeleteMulti(c, []*taskqueue.Task{task1, task2}, "queue1")
+
+		Expect(qm.QueuesToTasks["queue1"]).To(HaveLen(0))
+		Expect(qm.HasTaskInQueue(task1, "queue1")).To(BeFalse())
+		Expect(qm.HasTaskInQueue(task2, "queue1")).To(BeFalse())
+	})
+
+	It("returns an error that says the tasks that it could not remove", func() {
+		qm := taskqueue.NewNonExecutingQueueManager()
+		task1 := &taskqueue.Task{
+			&ae.Task{Name: "fooTask"},
+		}
+		task2 := &taskqueue.Task{
+			&ae.Task{Name: "barTask"},
+		}
+		err := qm.DeleteMulti(c, []*taskqueue.Task{task1, task2}, "queue1")
+		Expect(err.Error()).To(ContainSubstring("could not delete fooTask, barTask"))
+	})
 })
