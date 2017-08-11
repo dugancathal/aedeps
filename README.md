@@ -19,3 +19,4 @@ implement.
 Currently, aedeps provides implementations/abstractions for:
 
 * [TaskQueue](https://godoc.org/google.golang.org/appengine/taskqueue)
+* [ContextFactory](https://cloud.google.com/appengine/docs/standard/go/reference#NewContext)
