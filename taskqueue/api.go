@@ -21,14 +21,14 @@ func UseNonExecutingQueueManager() {
 	queueManager = NewNonExecutingQueueManager()
 }
 
-func NewPOSTTask(path string, params url.Values) *Task {
-	return &Task{ae.NewPOSTTask(path, params)}
+func NewPOSTTask(path string, params url.Values) *ae.Task {
+	return ae.NewPOSTTask(path, params)
 }
 
-func Add(c context.Context, task *Task, queueName string) (*Task, error) {
+func Add(c context.Context, task *ae.Task, queueName string) (*ae.Task, error) {
 	return queueManager.Add(c, task, queueName)
 }
 
-func Delete(c context.Context, task *Task, queueName string) error {
+func Delete(c context.Context, task *ae.Task, queueName string) error {
 	return queueManager.Delete(c, task, queueName)
 }

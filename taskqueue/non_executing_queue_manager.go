@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"golang.org/x/net/context"
+	ae "google.golang.org/appengine/taskqueue"
 )
 
 //
@@ -26,30 +27,30 @@ import (
 // tasks to actually get queued up.
 //
 type NonExecutingQueueManager struct {
-	QueuesToTasks map[string][]*Task
+	QueuesToTasks map[string][]*ae.Task
 }
 
 func NewNonExecutingQueueManager() *NonExecutingQueueManager {
 	return &NonExecutingQueueManager{
-		QueuesToTasks: make(map[string][]*Task),
+		QueuesToTasks: make(map[string][]*ae.Task),
 	}
 }
 
-func (qm *NonExecutingQueueManager) Add(c context.Context, task *Task, queueName string) (*Task, error) {
+func (qm *NonExecutingQueueManager) Add(c context.Context, task *ae.Task, queueName string) (*ae.Task, error) {
 	qm.createQueueIfNotExists(queueName)
 
 	qm.QueuesToTasks[queueName] = append(qm.QueuesToTasks[queueName], task)
 	return task, nil
 }
 
-func (qm *NonExecutingQueueManager) AddMulti(c context.Context, tasks []*Task, queueName string) ([]*Task, error) {
+func (qm *NonExecutingQueueManager) AddMulti(c context.Context, tasks []*ae.Task, queueName string) ([]*ae.Task, error) {
 	qm.createQueueIfNotExists(queueName)
 
 	qm.QueuesToTasks[queueName] = append(qm.QueuesToTasks[queueName], tasks...)
 	return tasks, nil
 }
 
-func (qm *NonExecutingQueueManager) Delete(c context.Context, task *Task, queueName string) error {
+func (qm *NonExecutingQueueManager) Delete(c context.Context, task *ae.Task, queueName string) error {
 	taskIndex := qm.taskIndexInQueue(task, queueName)
 
 	if taskIndex == -1 {
@@ -61,7 +62,7 @@ func (qm *NonExecutingQueueManager) Delete(c context.Context, task *Task, queueN
 	return nil
 }
 
-func (qm *NonExecutingQueueManager) DeleteMulti(c context.Context, tasks []*Task, queueName string) error {
+func (qm *NonExecutingQueueManager) DeleteMulti(c context.Context, tasks []*ae.Task, queueName string) error {
 	undeletableTaskNames := []string{}
 	for _, task := range tasks {
 		taskIndex := qm.taskIndexInQueue(task, queueName)
@@ -79,18 +80,18 @@ func (qm *NonExecutingQueueManager) DeleteMulti(c context.Context, tasks []*Task
 	return nil
 }
 
-func (qm *NonExecutingQueueManager) HasTaskInQueue(task *Task, queueName string) bool {
+func (qm *NonExecutingQueueManager) HasTaskInQueue(task *ae.Task, queueName string) bool {
 	return qm.taskIndexInQueue(task, queueName) > -1
 }
 
 func (qm *NonExecutingQueueManager) createQueueIfNotExists(queueName string) {
 	_, hasQueue := qm.QueuesToTasks[queueName]
 	if !hasQueue {
-		qm.QueuesToTasks[queueName] = []*Task{}
+		qm.QueuesToTasks[queueName] = []*ae.Task{}
 	}
 }
 
-func (qm *NonExecutingQueueManager) taskIndexInQueue(task *Task, queueName string) int {
+func (qm *NonExecutingQueueManager) taskIndexInQueue(task *ae.Task, queueName string) int {
 	for i, t := range qm.QueuesToTasks[queueName] {
 		if task.Name == t.Name {
 			return i
